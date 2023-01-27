@@ -98,7 +98,7 @@ function main() {
 //Choose to view all departments
 //formatted table showing department names and department ids
 function viewDepartments() {
-  connection.query(`select * from department `, function (err, results) {
+  connection.query(`SELECT name FROM department`, function (err, results) {
     console.table(results);
     main();
   });
@@ -106,7 +106,7 @@ function viewDepartments() {
 //Choose to view all roles
 //table of job title, role id, the department that role belongs to, and the salary for that role
 function viewRoles() {
-  connection.query(`select * from role`, function (err, results) {
+  connection.query(`SELECT role.id, role.title, role.salary, department.name AS department FROM role INNER JOIN department ON role.department_id=department.id`, function (err, results) {
     console.table(results);
     main();
   });
@@ -114,7 +114,7 @@ function viewRoles() {
 //Choose to view all employees
 //table showing employee data, including employee ids, first names, last names, job titles, departments, salaries, and managers that the employees report to
 function viewEmployees() {
-  connection.query(`select * from employee`, function (err, results) {
+  connection.query(`select employee.first_name,employee.last_name,role.title FROM employee INNER JOIN role ON employee.role_id=role.id`, function (err, results) {
     console.table(results);
     main();
   });
@@ -136,7 +136,7 @@ function addDepartment() {
         "[ Successfully added " + answers.department_name + " to the database ]"
       );
       connection.query("INSERT INTO department SET?", {
-        department_name: answers.department_name,
+        name: answers.department_name,
       });
       main();
     });
@@ -153,7 +153,7 @@ function addRole() {
       return res[0].map((dept) => {
         return {
           name: dept.id,
-          value: dept.name,
+          value: dept.name + dept.id,
         };
       });
     })
@@ -161,7 +161,7 @@ function addRole() {
       return inquirer.prompt([
         {
           type: "input",
-          name: "roles",
+          name: "role",
           message: "What is the name of the role?",
         },
         {
@@ -180,12 +180,15 @@ function addRole() {
     })
     .then((answer) => {
       console.log(answer);
+      console.log("Adding" )
       return connection.promise().query("INSERT INTO role SET ?", {
         title: answer.roles,
         salary: answer.salary,
-        department_id: answer.depts,
+        department_id: answer.id,
       });
+    
     });
+  main();
 }
 //Choose to add an employee
 //prompted to enter the employee’s first name, last name, role, and manager, and that employee is added to the database
